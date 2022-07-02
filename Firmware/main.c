@@ -92,7 +92,7 @@ int main(void)
     P1DIR = MOTOR;                                  // P1.7 = LED
     P2DIR = LED;                                    // P2.0 = LED
     P1OUT = 0;
-    P2OUT = 0;
+    P2OUT = LED;
     PM5CTL0 &= ~LOCKLPM5;
     __bis_SR_register(GIE);                         // Enable interrupts
     measure_count();                                // Establish baseline capacitance
@@ -127,8 +127,6 @@ int main(void)
                 pressBuffer +=1;                //push
                 if (pressBuffer > 0x000F)
                     outputEnable = 1;
-//                    P1OUT |= MOTOR;             // key pressed
-//                    startPWM();
             }
         }
         /* Handle baseline measurment for a base C increase*/
@@ -137,9 +135,15 @@ int main(void)
             base_cnt = base_cnt - 1;            // Adjust baseline down, should be
         }                                       // slow to accomodate for genuine
         if (outputEnable == 1)
+        {
             startPWM();
+            P2OUT &= (~LED);
+        }
         else
+        {
             stopPWM();
+            P2OUT |= LED;
+        }
         /* Delay to next sample */
         WDTCTL = WDT_delay_setting;                 // WDT, ACLK, interval timer
         __bis_SR_register(LPM3_bits);
@@ -149,8 +153,6 @@ int main(void)
 /* Measure count result (capacitance) of each sensor*/
 void measure_count(void)
 {
-//    if (outputEnable == 1)
-//        stopPWM();
     TB0CTL = TBSSEL_3 + MC_2;                       // INCLK, cont mode
     TB0CCTL1 = CM_3 + CCIS_2 + CAP;                 // Pos&Neg,GND,Cap
     /*Configure Ports for relaxation oscillator*/

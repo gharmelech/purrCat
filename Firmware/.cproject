@@ -90,7 +90,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="lnk_msp430fr2100.cmd|lnk_msp430fr2000.cmd|filtered_tactile_input_with_pwm_output.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="main_bu.c|lnk_msp430fr2100.cmd|lnk_msp430fr2000.cmd|filtered_tactile_input_with_pwm_output.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

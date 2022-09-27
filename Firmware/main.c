@@ -1,4 +1,16 @@
-/* --COPYRIGHT--,BSD_EX
+/*purrCat - a purring cat PCB by Gal Harmelech
+ * I wanted to make this cat as picky as a real cat, so it does not purr for any type of petting:
+ * The main principle is a 2 seconds buffer with 250 ms slots, this enables identifying "petting" between 0.5 to 4 Hz
+ * If being petted with an accaptable pattern for more than 1 second - It will start purring.
+ * For the Purring there is a 40 Hz PWM function with 0.25 to 0.33 duty cycle dynamicaly changing to give the small ramp-up and down in a cat's purring
+ * The eyes just light up whenever it is purring, but more sophisticated schemes are possiable as the eyes are wired to the seconed timer output
+ * Feel free to improve and expend this software, I'm curious to see what the community could do with it!
+ * My one request is that you do not remove my name from it
+ * Have Fun!
+ * 
+ * Some parts of the software are based on TI's example code, for those parts the followind is aplicable:
+ * 
+ * --COPYRIGHT--,BSD_EX
  * Copyright (c) 2014, Texas Instruments Incorporated
  * All rights reserved.
  *
@@ -52,7 +64,7 @@
 /* Defines WDT ACLK interval for delay between measurement cycles*/
 #define WDT_delay_setting (DIV_ACLK_8192)
 /* Sensor settings*/
-#define KEY_LVL     (1100)                           // Defines threshold for a key press
+#define KEY_LVL     (750)                           // Defines threshold for a key press
 /*Set to ~ half the max delta expected*/
 
 /* Definitions for use with the WDT settings*/
@@ -65,15 +77,18 @@
 #define DIV_SMCLK_512   (WDT_MDLY_0_5)              // SMCLK/512
 #define DIV_SMCLK_64    (WDT_MDLY_0_064)            // SMCLK/64
 
+/*Outputs*/
 #define LED                 (BIT0)                  // P2.0 LED output
 #define MOTOR               (BIT7)                  // P1.7 Vibration motor output
+
+/*Touch Pads*/
 #define TOUCHPAD_1          (BIT6)                  // P1.6 Touchpad
-#define TOUCHPAD_2          (BIT5)                  // P1.5 Touchpad
-#define TOUCHPAD_3          (BIT4)                  // P1.4 Touchpad
-#define TOUCHPAD_4          (BIT3)                  // P1.3 Touchpad
 #define CPTURE_TOUCHPAD_1   (CAPTIOEN + CAPTIOPOSEL0 + CAPTIOPISEL_6)
+#define TOUCHPAD_2          (BIT5)                  // P1.5 Touchpad
 #define CPTURE_TOUCHPAD_2   (CAPTIOEN + CAPTIOPOSEL0 + CAPTIOPISEL_5)
+#define TOUCHPAD_3          (BIT4)                  // P1.4 Touchpad
 #define CPTURE_TOUCHPAD_3   (CAPTIOEN + CAPTIOPOSEL0 + CAPTIOPISEL_4)
+#define TOUCHPAD_4          (BIT3)                  // P1.3 Touchpad
 #define CPTURE_TOUCHPAD_4   (CAPTIOEN + CAPTIOPOSEL0 + CAPTIOPISEL_3)
 
 // Global variables for sensing
@@ -81,8 +96,7 @@ unsigned int base_cnt, meas_cnt;
 int delta_cnt;
 volatile uint16_t pressBuffer = 0;
 uint8_t outputEnable = 0;
-//uint8_t dutyCounts [7] = {175, 200, 200, 250, 250, 200, 200};
-uint8_t dutyCounts [5] = {200, 200, 255, 255, 255};
+uint8_t dutyCounts [] = {200, 200, 255, 255, 255};
 uint8_t dutyIndex = 0;
 uint8_t idleCnt = 0;
 /* System Routines*/
@@ -94,10 +108,8 @@ int main(void)
 {
     unsigned int i;
     WDTCTL = WDTPW + WDTHOLD;                       // Stop watchdog timer
-    PM5CTL0 &= ~LOCKLPM5;
-
     SFRIE1 |= WDTIE;                                // enable WDT interrupt
-//    P1DIR = 0xff & ~(TOUCHPAD_1 | TOUCHPAD_2 | TOUCHPAD_3 | TOUCHPAD_4);
+//  P1DIR = 0xff & ~(TOUCHPAD_1 | TOUCHPAD_2 | TOUCHPAD_3 | TOUCHPAD_4);
     P1DIR = 0xff & ~(TOUCHPAD_3);
     P2DIR = 0xff;
     P1OUT = 0x0;
@@ -114,39 +126,37 @@ int main(void)
     /* Main loop starts here*/
     while (1)
     {
-        pressBuffer = (pressBuffer << 1);
+        pressBuffer = (pressBuffer << 1);           // Advance sliding window
         if (pressBuffer < 5)
             outputEnable = 0;
-        measure_count();                         // Measure all sensors
-        delta_cnt = base_cnt - meas_cnt;         // Calculate delta: c_change
-        if (delta_cnt < 0)                       // If negative: result increased
-        {                                        // beyond baseline, i.e. cap dec
-            base_cnt = (base_cnt+meas_cnt) >> 1; // Re-average quickly
-            delta_cnt = 0;                       // Zero out for pos determination
+        measure_count();
+        delta_cnt = base_cnt - meas_cnt;            // Calculate delta: c_change
+        if (delta_cnt < 0)                          // If negative: result increased
+        {                                           // beyond baseline, i.e. cap dec
+            base_cnt = (base_cnt+meas_cnt) >> 1;    // Re-average quickly
+            delta_cnt = 0;                          // Zero out for pos determination
         }
-        else if (delta_cnt > KEY_LVL)            // Determine if each key is pressed
+        else if (delta_cnt > KEY_LVL)               // Touch detected
         {
             idleCnt = 0;
-            if ((pressBuffer & 0x0006) == 0x0006)    //two previous slots had a press - stop output and reset frame
+            if ((pressBuffer & 0x0006) == 0x0006)   // Two previous slots had a press --> stop output and reset buffer
             {
                 pressBuffer = 1;
                 outputEnable = 0;
             }
             else
             {
-                pressBuffer +=1;                //push
+                pressBuffer +=1;                    // push
                 if (pressBuffer > 0x000F)
                     outputEnable = 1;
             }
         }
-        /* Handle baseline measurement for a base C increase*/
-        else                                    // Only adjust baseline down
-        {                                       // if no keys are touched
-            base_cnt = base_cnt - 1;            // Adjust baseline down, should be
+        else                                        // No Touch detected
+        {
+            base_cnt = base_cnt - 1;                // Account for capacitance drift
             if (idleCnt < 150)
                 idleCnt++;
         }
-        // slow to accommodate for genuine
         if (outputEnable == 1)
         {
             startPWM();
@@ -157,25 +167,23 @@ int main(void)
             stopPWM();
             P2OUT |= LED;
         }
-        /* Delay to next sample */
-
-        if (idleCnt < 150)
+        if (idleCnt < 150)                          // Active mode, delay ~250mS for next sample
         {
-            WDTCTL = WDT_delay_setting;                 // WDT, ACLK, interval timer
+            WDTCTL = WDT_delay_setting;             // WDT, ACLK, interval timer
             __bis_SR_register(LPM4_bits);
         }
-        else
+        else                                        // Idle mode, sample every ~1 second to conserve power
         {
-            WDTCTL = WDTPW + WDTHOLD;                       // Stop watchdog timer
-            RTCMOD = 10-1;                                  // Interrupt and reset happen every 10*1000*(1/10KHz) = ~1S
+            WDTCTL = WDTPW + WDTHOLD;               // Stop watchdog timer
+            RTCMOD = 10-1;                          // Interrupt and reset happen every 10*1000*(1/10KHz) = ~1S
             RTCCTL |= RTCSS__VLOCLK | RTCSR |RTCPS__1000;
             RTCCTL |= RTCIE;
-            __low_power_mode_4();            // Enter LPM3, Stop all clocks
+            __bis_SR_register(LPM4_bits);
         }
     }
 }                                                   // End Main
 
-/* Measure count result (capacitance) of each sensor*/
+/* Measure count result (capacitance)*/
 void measure_count(void)
 {
     TB0CTL = TBSSEL_3 + MC_2;                       // INCLK, cont mode
@@ -193,16 +201,19 @@ void measure_count(void)
 }
 void startPWM(void)
 {
-    TB0CCR0 = 800-1;                        // PWM Freq (32.768kHz divided by TB0CCR0)
-    TB0CCR2 = dutyCounts[(uint8_t)(dutyIndex++ % 5)];                           // CCR2 PWM duty cycle (TB0CCR2/TB0CCR0)
-    TB0CCTL2 = OUTMOD_7;                     // CCR2 reset/set
-    TB0CTL = TBSSEL__ACLK | MC__UP | TBCLR;  // ACLK, up mode, clear TAR
-    P1SEL1 |= MOTOR;
+    TB0CCR0 = 800-1;                                // PWM Freq ~40Hz (32.768kHz divided by TB0CCR0)
+    dutyIndex++;
+    if (dutyIndex > 4)
+        dutyIndex = 0;
+    TB0CCR2 = dutyCounts[(uint8_t)(dutyIndex)];     // CCR2 PWM duty cycle to ~0.25-0.3 (TB0CCR2/TB0CCR0)
+    TB0CCTL2 = OUTMOD_7;                            // CCR2 reset/set
+    TB0CTL = TBSSEL__ACLK | MC__UP | TBCLR;         // ACLK, up mode, clear TAR
+    P1SEL1 |= MOTOR;                                // Configure Motor output to Timer B 0.2
     PM5CTL0 &= ~LOCKLPM5;
 }
 void stopPWM(void)
 {
-    TB0CTL = TBSSEL__ACLK | MC__STOP | TBCLR;  // ACLK, stop mode, clear TAR
+    TB0CTL = TBSSEL__ACLK | MC__STOP | TBCLR;       // ACLK, stop mode, clear TAR
     P1SEL1 &= ~(MOTOR);
 }
 
@@ -217,8 +228,10 @@ void __attribute__ ((interrupt(WDT_VECTOR))) watchdog_timer (void)
 #endif
 {
     TB0CCTL1 ^= CCIS0;                              // Create SW capture of CCR1
-    __bic_SR_register_on_exit(LPM4_bits);           // Exit LPM3 on reti
+    __bic_SR_register_on_exit(LPM4_bits);           // Exit LPM4 on reti
 }
+
+/*RTC ISR*/
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 #pragma vector=RTC_VECTOR
 __interrupt void RTC_ISR(void)

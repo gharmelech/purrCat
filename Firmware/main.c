@@ -59,6 +59,11 @@
 #include <msp430.h>
 #include <stdint.h>
 #include <stdbool.h>
+
+//#define USE_IDLEMODE
+#define IDLE_SAMPLE_PERIOD 1500                     //Time between samples when in idle mode (ms)
+#define IDLE_SAMPLE_PERIOD_FACTOR ((int)((10 * IDLE_SAMPLE_PERIOD) / 256))
+
 /* Defines WDT SMCLK interval for sensor measurements*/
 #define WDT_meas_setting (DIV_SMCLK_512)
 /* Defines WDT ACLK interval for delay between measurement cycles*/
@@ -83,22 +88,23 @@
 
 /*Touch Pads*/
 #define TOUCHPAD_1          (BIT6)                  // P1.6 Touchpad
-#define CPTURE_TOUCHPAD_1   (CAPTIOEN + CAPTIOPOSEL0 + CAPTIOPISEL_6)
+#define CAPTURE_TOUCHPAD_1   (CAPTIOEN + CAPTIOPOSEL0 + CAPTIOPISEL_6)
 #define TOUCHPAD_2          (BIT5)                  // P1.5 Touchpad
-#define CPTURE_TOUCHPAD_2   (CAPTIOEN + CAPTIOPOSEL0 + CAPTIOPISEL_5)
+#define CAPTURE_TOUCHPAD_2   (CAPTIOEN + CAPTIOPOSEL0 + CAPTIOPISEL_5)
 #define TOUCHPAD_3          (BIT4)                  // P1.4 Touchpad
-#define CPTURE_TOUCHPAD_3   (CAPTIOEN + CAPTIOPOSEL0 + CAPTIOPISEL_4)
+#define CAPTURE_TOUCHPAD_3   (CAPTIOEN + CAPTIOPOSEL0 + CAPTIOPISEL_4)
 #define TOUCHPAD_4          (BIT3)                  // P1.3 Touchpad
-#define CPTURE_TOUCHPAD_4   (CAPTIOEN + CAPTIOPOSEL0 + CAPTIOPISEL_3)
+#define CAPTURE_TOUCHPAD_4   (CAPTIOEN + CAPTIOPOSEL0 + CAPTIOPISEL_3)
 
 // Global variables for sensing
 unsigned int base_cnt, meas_cnt;
 int delta_cnt;
-volatile uint16_t pressBuffer = 0;
+uint8_t pressBuffer = 0;
 uint8_t outputEnable = 0;
 uint8_t dutyCounts [] = {200, 200, 255, 255, 255};
 uint8_t dutyIndex = 0;
 uint8_t idleCnt = 0;
+long debug_counter =0;
 /* System Routines*/
 void measure_count(void);                           // Measures each capacitive sensor
 void startPWM(void);
@@ -109,8 +115,7 @@ int main(void)
     unsigned int i;
     WDTCTL = WDTPW + WDTHOLD;                       // Stop watchdog timer
     SFRIE1 |= WDTIE;                                // enable WDT interrupt
-//  P1DIR = 0xff & ~(TOUCHPAD_1 | TOUCHPAD_2 | TOUCHPAD_3 | TOUCHPAD_4);
-    P1DIR = 0xff & ~(TOUCHPAD_3);
+    P1DIR = 0xff;
     P2DIR = 0xff;
     P1OUT = 0x0;
     P2OUT = LED;
@@ -127,8 +132,8 @@ int main(void)
     while (1)
     {
         pressBuffer = (pressBuffer << 1);           // Advance sliding window
-        if (pressBuffer < 5)
-            outputEnable = 0;
+        if (pressBuffer == 0)
+//            outputEnable = 0;
         measure_count();
         delta_cnt = base_cnt - meas_cnt;            // Calculate delta: c_change
         if (delta_cnt < 0)                          // If negative: result increased
@@ -138,25 +143,42 @@ int main(void)
         }
         else if (delta_cnt > KEY_LVL)               // Touch detected
         {
+#ifdef USE_IDLEMODE
             idleCnt = 0;
+#endif
             if ((pressBuffer & 0x0006) == 0x0006)   // Two previous slots had a press --> stop output and reset buffer
             {
                 pressBuffer = 1;
-                outputEnable = 0;
+//                outputEnable = 0;
             }
             else
             {
                 pressBuffer +=1;                    // push
-                if (pressBuffer > 0x000F)
+                if (pressBuffer > 0x0F)
                     outputEnable = 1;
             }
         }
         else                                        // No Touch detected
         {
             base_cnt = base_cnt - 1;                // Account for capacitance drift
+#ifdef USE_IDLEMODE
             if (idleCnt < 150)
                 idleCnt++;
+#endif
         }
+
+         /*Power analysis*/
+        debug_counter++;
+        if (debug_counter > 2560)
+            debug_counter = 0;
+        if(debug_counter < 160)
+            outputEnable = 1;
+        else
+        {
+            outputEnable = 0;
+        }
+        /*Power analysis*/
+
         if (outputEnable == 1)
         {
             startPWM();
@@ -167,19 +189,14 @@ int main(void)
             stopPWM();
             P2OUT |= LED;
         }
-        if (idleCnt < 150)                          // Active mode, delay ~250mS for next sample
-        {
-            WDTCTL = WDT_delay_setting;             // WDT, ACLK, interval timer
-            __bis_SR_register(LPM4_bits);
-        }
-        else                                        // Idle mode, sample every ~1 second to conserve power
-        {
-            WDTCTL = WDTPW + WDTHOLD;               // Stop watchdog timer
-            RTCMOD = 10-1;                          // Interrupt and reset happen every 10*1000*(1/10KHz) = ~1S
-            RTCCTL |= RTCSS__VLOCLK | RTCSR |RTCPS__1000;
-            RTCCTL |= RTCIE;
-            __bis_SR_register(LPM4_bits);
-        }
+        RTCMOD = 10-1;                              // Active mode: Interrupt and reset happen every 10*256*(1/10KHz) = ~0.25S
+#ifdef USE_IDLEMODE
+        if (idleCnt == 150)                         // Idle mode, sample every ~1.5 second to conserve power
+            RTCMOD = IDLE_SAMPLE_PERIOD_FACTOR-1;   // Interrupt and reset happen every 59*256*(1/10KHz) = ~1.5S
+#endif
+        RTCCTL |= RTCSS__VLOCLK | RTCSR |RTCPS__256;
+        RTCCTL |= RTCIE;
+        __bis_SR_register(LPM4_bits);
     }
 }                                                   // End Main
 
@@ -189,7 +206,7 @@ void measure_count(void)
     TB0CTL = TBSSEL_3 + MC_2;                       // INCLK, cont mode
     TB0CCTL1 = CM_3 + CCIS_2 + CAP;                 // Pos&Neg,GND,Cap
     /*Configure Ports for relaxation oscillator*/
-    CAPTIOCTL |= CPTURE_TOUCHPAD_3;                 //Only using touchpad #3, in future could create more elaborate functions using the other pads
+    CAPTIOCTL |= CAPTURE_TOUCHPAD_3;                 //Only using touchpad #3, in future could create more elaborate functions using the other pads
     /*Setup Gate Timer*/
     WDTCTL = WDT_meas_setting;                      // WDT, ACLK, interval timer
     TB0CTL |= TBCLR;                                // Clear Timer_B TBR
@@ -201,11 +218,11 @@ void measure_count(void)
 }
 void startPWM(void)
 {
-    TB0CCR0 = 800-1;                                // PWM Freq ~40Hz (32.768kHz divided by TB0CCR0)
+    TB0CCR0 = 1300-1;                                // PWM Freq 32.768kHz divided by TB0CCR0
     dutyIndex++;
     if (dutyIndex > 4)
         dutyIndex = 0;
-    TB0CCR2 = dutyCounts[(uint8_t)(dutyIndex)];     // CCR2 PWM duty cycle to ~0.25-0.3 (TB0CCR2/TB0CCR0)
+    TB0CCR2 = dutyCounts[(uint8_t)(dutyIndex)]; // CCR2 PWM duty cycle TB0CCR2/TB0CCR0
     TB0CCTL2 = OUTMOD_7;                            // CCR2 reset/set
     TB0CTL = TBSSEL__ACLK | MC__UP | TBCLR;         // ACLK, up mode, clear TAR
     P1SEL1 |= MOTOR;                                // Configure Motor output to Timer B 0.2
@@ -241,6 +258,7 @@ void __attribute__ ((interrupt(RTC_VECTOR))) RTC_ISR (void)
 #error Compiler not supported!
 #endif
 {
+    TB0CCTL1 ^= CCIS0;                              // Create SW capture of CCR1
     RTCCTL = RTCSS__DISABLED;
     __bic_SR_register_on_exit(LPM4_bits);
 }

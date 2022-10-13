@@ -133,7 +133,7 @@ int main(void)
     {
         pressBuffer = (pressBuffer << 1);           // Advance sliding window
         if (pressBuffer == 0)
-//            outputEnable = 0;
+            outputEnable = 0;
         measure_count();
         delta_cnt = base_cnt - meas_cnt;            // Calculate delta: c_change
         if (delta_cnt < 0)                          // If negative: result increased
@@ -148,8 +148,8 @@ int main(void)
 #endif
             if ((pressBuffer & 0x0006) == 0x0006)   // Two previous slots had a press --> stop output and reset buffer
             {
-                pressBuffer = 1;
-//                outputEnable = 0;
+                pressBuffer = 0;
+                outputEnable = 0;
             }
             else
             {
@@ -218,7 +218,7 @@ void measure_count(void)
 }
 void startPWM(void)
 {
-    TB0CCR0 = 1300-1;                                // PWM Freq 32.768kHz divided by TB0CCR0
+    TB0CCR0 = 900-1;                                // PWM Freq 32.768kHz divided by TB0CCR0
     dutyIndex++;
     if (dutyIndex > 4)
         dutyIndex = 0;

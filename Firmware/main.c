@@ -127,7 +127,7 @@ int main(void)
     while (1)
     {
         pressBuffer = (pressBuffer << 1);           // Advance sliding window
-        if (pressBuffer < 5)
+        if (pressBuffer == 0)
             outputEnable = 0;
         measure_count();
         delta_cnt = base_cnt - meas_cnt;            // Calculate delta: c_change
@@ -141,7 +141,7 @@ int main(void)
             idleCnt = 0;
             if ((pressBuffer & 0x0006) == 0x0006)   // Two previous slots had a press --> stop output and reset buffer
             {
-                pressBuffer = 1;
+                pressBuffer = 0;
                 outputEnable = 0;
             }
             else

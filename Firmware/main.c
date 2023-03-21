@@ -60,14 +60,19 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-//#define USE_IDLEMODE
-#define IDLE_SAMPLE_PERIOD 1500                     //Time between samples when in idle mode (ms)
-#define IDLE_SAMPLE_PERIOD_FACTOR ((int)((10 * IDLE_SAMPLE_PERIOD) / 256))
+/*Time constants*/
+#define WDT_meas_setting (DIV_SMCLK_512)            // Defines WDT SMCLK interval for sensor measurements with duration of 0.5 ms
+#define WAIT_PERIOD_FACTOR (5)                      // actual delay is given by ((Factor)*256)/10 (ms)
 
-/* Defines WDT SMCLK interval for sensor measurements*/
-#define WDT_meas_setting (DIV_SMCLK_512)
-/* Defines WDT ACLK interval for delay between measurement cycles*/
-#define WDT_delay_setting (DIV_ACLK_8192)
+/*Idle Mode*/
+//#define USE_IDLEMODE
+#ifdef USE_IDLEMODE
+#define ACTIVE_TIME 30                              // Time to stay active before entering idle mode (sec)
+#define IDLE_LIMIT (ACTIVE_TIME<<2)
+#define IDLE_SAMPLE_PERIOD 1500                     // Time between samples when in idle mode (ms)
+#define IDLE_SAMPLE_PERIOD_FACTOR ((int)((10 * IDLE_SAMPLE_PERIOD) / 256))
+#endif
+
 /* Sensor settings*/
 #define KEY_LVL     (750)                           // Defines threshold for a key press
 /*Set to ~ half the max delta expected*/
@@ -99,12 +104,13 @@
 // Global variables for sensing
 unsigned int base_cnt, meas_cnt;
 int delta_cnt;
-uint8_t pressBuffer = 0;
+uint16_t pressBuffer = 0;
 uint8_t outputEnable = 0;
 uint8_t dutyCounts [] = {200, 200, 255, 255, 255};
 uint8_t dutyIndex = 0;
+#ifdef USE_IDLEMODE
 uint8_t idleCnt = 0;
-long debug_counter =0;
+#endif
 /* System Routines*/
 void measure_count(void);                           // Measures each capacitive sensor
 void startPWM(void);
@@ -162,23 +168,10 @@ int main(void)
         {
             base_cnt = base_cnt - 1;                // Account for capacitance drift
 #ifdef USE_IDLEMODE
-            if (idleCnt < 150)
+            if (idleCnt < IDLE_LIMIT)
                 idleCnt++;
 #endif
         }
-
-         /*Power analysis*/
-        debug_counter++;
-        if (debug_counter > 2560)
-            debug_counter = 0;
-        if(debug_counter < 160)
-            outputEnable = 1;
-        else
-        {
-            outputEnable = 0;
-        }
-        /*Power analysis*/
-
         if (outputEnable == 1)
         {
             startPWM();
@@ -189,9 +182,9 @@ int main(void)
             stopPWM();
             P2OUT |= LED;
         }
-        RTCMOD = 10-1;                              // Active mode: Interrupt and reset happen every 10*256*(1/10KHz) = ~0.25S
+        RTCMOD = WAIT_PERIOD_FACTOR;                // Active mode: Interrupt and reset happen every 10*256*(1/10KHz) = ~0.25S
 #ifdef USE_IDLEMODE
-        if (idleCnt == 150)                         // Idle mode, sample every ~1.5 second to conserve power
+        if (idleCnt == IDLE_LIMIT)                  // Idle mode, sample every ~1.5 second to conserve power
             RTCMOD = IDLE_SAMPLE_PERIOD_FACTOR-1;   // Interrupt and reset happen every 59*256*(1/10KHz) = ~1.5S
 #endif
         RTCCTL |= RTCSS__VLOCLK | RTCSR |RTCPS__256;

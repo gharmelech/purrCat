@@ -61,31 +61,20 @@
 #include <stdbool.h>
 
 /*Time constants*/
-#define WDT_meas_setting (DIV_SMCLK_512)            // Defines WDT SMCLK interval for sensor measurements with duration of 0.5 ms
-#define WAIT_PERIOD_FACTOR (5)                      // actual delay is given by ((Factor)*256)/10 (ms)
+#define WDT_meas_setting (WDT_MDLY_0_5)             // Defines WDT SMCLK interval for sensor measurements with duration of 0.5 ms
+#define SAMPLE_PERIOD (125)                         // Time between samples in ms
 
 /*Idle Mode*/
 //#define USE_IDLEMODE
 #ifdef USE_IDLEMODE
-#define ACTIVE_TIME 30                              // Time to stay active before entering idle mode (sec)
+#define ACTIVE_TIME 10                              // Time to stay active before entering idle mode (sec)
 #define IDLE_LIMIT (ACTIVE_TIME<<2)
-#define IDLE_SAMPLE_PERIOD 1500                     // Time between samples when in idle mode (ms)
-#define IDLE_SAMPLE_PERIOD_FACTOR ((int)((10 * IDLE_SAMPLE_PERIOD) / 256))
+#define IDLE_SAMPLE_PERIOD (1500)                   // Time between samples when in idle mode (ms)
 #endif
 
 /* Sensor settings*/
 #define KEY_LVL     (750)                           // Defines threshold for a key press
 /*Set to ~ half the max delta expected*/
-
-/* Definitions for use with the WDT settings*/
-#define DIV_ACLK_32768  (WDT_ADLY_1000)             // ACLK/32768
-#define DIV_ACLK_8192   (WDT_ADLY_250)              // ACLK/8192
-#define DIV_ACLK_512    (WDT_ADLY_16)               // ACLK/512
-#define DIV_ACLK_64     (WDT_ADLY_1_9)              // ACLK/64
-#define DIV_SMCLK_32768 (WDT_MDLY_32)               // SMCLK/32768
-#define DIV_SMCLK_8192  (WDT_MDLY_8)                // SMCLK/8192
-#define DIV_SMCLK_512   (WDT_MDLY_0_5)              // SMCLK/512
-#define DIV_SMCLK_64    (WDT_MDLY_0_064)            // SMCLK/64
 
 /*Outputs*/
 #define LED                 (BIT0)                  // P2.0 LED output
@@ -160,7 +149,7 @@ int main(void)
             else
             {
                 pressBuffer +=1;                    // push
-                if (pressBuffer > 0x0F)
+                if (pressBuffer > 0x7F)
                     outputEnable = 1;
             }
         }
@@ -182,12 +171,12 @@ int main(void)
             stopPWM();
             P2OUT |= LED;
         }
-        RTCMOD = WAIT_PERIOD_FACTOR;                // Active mode: Interrupt and reset happen every 10*256*(1/10KHz) = ~0.25S
+        RTCMOD = SAMPLE_PERIOD-1;
 #ifdef USE_IDLEMODE
-        if (idleCnt == IDLE_LIMIT)                  // Idle mode, sample every ~1.5 second to conserve power
-            RTCMOD = IDLE_SAMPLE_PERIOD_FACTOR-1;   // Interrupt and reset happen every 59*256*(1/10KHz) = ~1.5S
+        if (idleCnt == IDLE_LIMIT)
+            RTCMOD = IDLE_SAMPLE_PERIOD-1;
 #endif
-        RTCCTL |= RTCSS__VLOCLK | RTCSR |RTCPS__256;
+        RTCCTL |= RTCSS__VLOCLK | RTCSR |RTCPS__10;
         RTCCTL |= RTCIE;
         __bis_SR_register(LPM4_bits);
     }

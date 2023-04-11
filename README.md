@@ -25,7 +25,7 @@ There are 4 touch pads on the PCB, but only 1 is in use in the current FW.
 #### **Picky Cat!**
 I wanted to make the cat as realistic as possible, so it only likes petting between 0.5 and 2Hz.  
 (*Since I'm not doing swipe detection, it would also work with tapping. I might change it in a future version*)  
-This is achived using a 2s sample buffer with 250ms slots. if the pad is touched for more than 3 slots in a row, the buffer zeroes.  
+This is achived using a 2s sample buffer with 125ms slots. if the pad is touched for more than 3 slots in a row, the buffer zeroes.  
 Furthermore, purring only starts after at least 1s of petting.
 
 #### **Realistic Purring**
@@ -51,8 +51,20 @@ While theoretical battery life should have been roughly 8 hours of purring or ab
 The 240mAh rating is given at much lower current draw than that of the active purring.  
 At 20mA, most cr2032 have a capacity of a mere 10-15mAh, giving only about 30 minutes of active purring.
 
+I don't have a good explantion for it, but idle time also seems to substencialy lower than the theoretical - getting to around one week.
+
 Note that this is not linear and even a small reduction in current draw while purring would result in longer operation time.  
 Sadly, I was'nt able to find a way to reduce to consumption enough.
+
+### **LiPo mod**
+Giving the poor battery life, I designed a small PCB holding an LDO and a charge connector for a LiPo, to be soldered instead of the battery clip.
+The thought of using a LiPo crossed my mind several times, but I deemed it unvaiabel because of cost and required PCB space for a charge controller.
+Finally, I had the realization to use a generic LiPo charger externaly (which could be obtained from AliExpress for very cheap) instead of making it onboard.
+
+I decided to use a 501015 60mAh battery.
+Because these are rated at 1C, we get a runtime much closer to the theoretical value - about 1.5 hours of purring!
+I have used a sub-optimal LDO with 30 uA quiescent current, which becomes the dominant current draw during idle.
+I calculated arround 40 days of idle time, but have not ran this long time test yet.
 
 ### **Parts List**
 - MCU: msp430fr2111

@@ -56,7 +56,7 @@ I don't have a good explantion for it, but idle time also seems to substencialy 
 Note that this is not linear and even a small reduction in current draw while purring would result in longer operation time.  
 Sadly, I was'nt able to find a way to reduce to consumption enough.
 
-### **LiPo mod**
+#### **LiPo mod**
 Giving the poor battery life, I designed a small PCB holding an LDO and a charge connector for a LiPo, to be soldered instead of the battery clip.
 The thought of using a LiPo crossed my mind several times, but I deemed it unvaiabel because of cost and required PCB space for a charge controller.
 Finally, I had the realization to use a generic LiPo charger externaly (which could be obtained from AliExpress for very cheap) instead of making it onboard.

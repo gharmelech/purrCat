@@ -60,6 +60,7 @@ Sadly, I was'nt able to find a way to reduce to consumption enough.
 Giving the poor battery life, I designed a small PCB holding an LDO and a charge connector for a LiPo, to be soldered instead of the battery clip.
 The thought of using a LiPo crossed my mind several times, but I deemed it unvaiabel because of cost and required PCB space for a charge controller.
 Finally, I had the realization to use a generic LiPo charger externaly (which could be obtained from AliExpress for very cheap) instead of making it onboard.
+I did changed the current select resistor on the charger such that the max charge current will be 100 mA - suitable for the tiny LiPo I use.
 
 I decided to use a 501015 60mAh battery.
 Because these are rated at 1C, we get a runtime much closer to the theoretical value - about 1.5 hours of purring!

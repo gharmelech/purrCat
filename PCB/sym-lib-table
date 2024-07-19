@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name "USB4135-GF-A_REVA")(type "KiCad")(uri "${KIPRJMOD}/purrCat_lib/6pos_usb/USB4135-GF-A_REVA.kicad_sym")(options "")(descr ""))
+)

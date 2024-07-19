@@ -1,14 +1,14 @@
 /*purrCat - a purring cat PCB by Gal Harmelech
  * I wanted to make this cat as picky as a real cat, so it does not purr for any type of petting:
  * The main principle is a 2 seconds buffer with 250 ms slots, this enables identifying "petting" between 0.5 to 4 Hz
- * If being petted with an accaptable pattern for more than 1 second - It will start purring.
- * For the Purring there is a 40 Hz PWM function with 0.25 to 0.33 duty cycle dynamicaly changing to give the small ramp-up and down in a cat's purring
- * The eyes just light up whenever it is purring, but more sophisticated schemes are possiable as the eyes are wired to the seconed timer output
+ * If being petted with an acceptable pattern for more than 1 second - It will start purring.
+ * For the Purring there is a 40 Hz PWM function with 0.25 to 0.33 duty cycle dynamically changing to give the small ramp-up and down in a cat's purring
+ * The eyes just light up whenever it is purring, but more sophisticated schemes are possible as the eyes are wired to the second timer output
  * Feel free to improve and expend this software, I'm curious to see what the community could do with it!
  * My one request is that you do not remove my name from it
  * Have Fun!
  * 
- * Some parts of the software are based on TI's example code, for those parts the followind is aplicable:
+ * Some parts of the software are based on TI's example code, for those parts the following is applicable:
  * 
  * --COPYRIGHT--,BSD_EX
  * Copyright (c) 2014, Texas Instruments Incorporated
@@ -188,7 +188,7 @@ void measure_count(void)
     TB0CTL = TBSSEL_3 + MC_2;                       // INCLK, cont mode
     TB0CCTL1 = CM_3 + CCIS_2 + CAP;                 // Pos&Neg,GND,Cap
     /*Configure Ports for relaxation oscillator*/
-    CAPTIOCTL |= CAPTURE_TOUCHPAD_3;                 //Only using touchpad #3, in future could create more elaborate functions using the other pads
+    CAPTIOCTL |= CAPTURE_TOUCHPAD_3;                //Only using touchpad #3, in future could create more elaborate functions using the other pads
     /*Setup Gate Timer*/
     WDTCTL = WDT_meas_setting;                      // WDT, ACLK, interval timer
     TB0CTL |= TBCLR;                                // Clear Timer_B TBR
@@ -204,7 +204,7 @@ void startPWM(void)
     dutyIndex++;
     if (dutyIndex > 4)
         dutyIndex = 0;
-    TB0CCR2 = dutyCounts[(uint8_t)(dutyIndex)]; // CCR2 PWM duty cycle TB0CCR2/TB0CCR0
+    TB0CCR2 = dutyCounts[(uint8_t)(dutyIndex)];     // CCR2 PWM duty cycle TB0CCR2/TB0CCR0
     TB0CCTL2 = OUTMOD_7;                            // CCR2 reset/set
     TB0CTL = TBSSEL__ACLK | MC__UP | TBCLR;         // ACLK, up mode, clear TAR
     P1SEL1 |= MOTOR;                                // Configure Motor output to Timer B 0.2

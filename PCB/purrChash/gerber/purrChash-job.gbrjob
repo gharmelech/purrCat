@@ -5,7 +5,7 @@
       "Application": "Pcbnew",
       "Version": "8.0.4"
     },
-    "CreationDate": "2024-07-22T12:01:49+03:00"
+    "CreationDate": "2024-07-30T00:27:24+03:00"
   },
   "GeneralSpecs": {
     "ProjectId": {
@@ -14,12 +14,12 @@
       "Revision": "rev?"
     },
     "Size": {
-      "X": 40.547,
-      "Y": 70.953
+      "X": 50.0,
+      "Y": 83.3
     },
     "LayerNumber": 2,
     "BoardThickness": 1.6,
-    "Finish": "None"
+    "Finish": "HAL SnPb"
   },
   "DesignRules": [
     {
@@ -72,10 +72,12 @@
   "MaterialStackup": [
     {
       "Type": "Legend",
+      "Color": "White",
       "Name": "Top Silk Screen"
     },
     {
       "Type": "SolderMask",
+      "Color": "R80G0B80",
       "Thickness": 0.01,
       "Name": "Top Solder Mask"
     },
@@ -86,6 +88,7 @@
     },
     {
       "Type": "Dielectric",
+      "Color": "R109G116B75",
       "Thickness": 1.51,
       "Material": "FR4",
       "Name": "F.Cu/B.Cu",
@@ -98,11 +101,13 @@
     },
     {
       "Type": "SolderMask",
+      "Color": "R80G0B80",
       "Thickness": 0.01,
       "Name": "Bottom Solder Mask"
     },
     {
       "Type": "Legend",
+      "Color": "White",
       "Name": "Bottom Silk Screen"
     }
   ]

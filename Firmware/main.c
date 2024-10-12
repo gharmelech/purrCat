@@ -77,7 +77,9 @@
 /*Set to ~ half the max delta expected*/
 
 /*Outputs*/
-#define LED                 (BIT0)                  // P2.0 LED output
+#define EYE_LED             (BIT1)                  // P2.1 LED output
+#define MOUTH_LED           (BIT0)                  // P2.0 LED output
+#define LED                 (EYE_LED | MOUTH_LED)   // Control both LED groups together
 #define MOTOR               (BIT7)                  // P1.7 Vibration motor output
 
 /*Touch Pads*/
@@ -188,7 +190,7 @@ void measure_count(void)
     TB0CTL = TBSSEL_3 + MC_2;                       // INCLK, cont mode
     TB0CCTL1 = CM_3 + CCIS_2 + CAP;                 // Pos&Neg,GND,Cap
     /*Configure Ports for relaxation oscillator*/
-    CAPTIOCTL |= CAPTURE_TOUCHPAD_3;                //Only using touchpad #3, in future could create more elaborate functions using the other pads
+    CAPTIOCTL |= CAPTURE_TOUCHPAD_1;                //Only using touchpad #1, in future could create more elaborate functions using the other pads
     /*Setup Gate Timer*/
     WDTCTL = WDT_meas_setting;                      // WDT, ACLK, interval timer
     TB0CTL |= TBCLR;                                // Clear Timer_B TBR

@@ -1,0 +1,128 @@
+(footprint "vibration_motor"
+	(version 20240108)
+	(generator "pcbnew")
+	(generator_version "8.0")
+	(layer "F.Cu")
+	(property "Reference" "REF**"
+		(at 5.9 -3 0)
+		(unlocked yes)
+		(layer "F.SilkS")
+		(uuid "46115a2d-9894-47b3-a976-c9e69d42d0d1")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.1)
+			)
+		)
+	)
+	(property "Value" "vibration_motor"
+		(at 3.9 4.5 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(uuid "3e1053ee-e9aa-4341-be9a-74fe06f646af")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Footprint" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "80371130-75da-4aa5-9a91-f9c324356605")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "9a168d4a-afad-4cf4-a63b-6b339246b19a")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "5a9ae03e-c40a-4bf3-9afa-77cc4f8b03fb")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd)
+	(fp_line
+		(start 6.225 -2.1)
+		(end 2.975 -2.1)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "Dwgs.User")
+		(uuid "22cb1214-0fb4-4c60-96fd-cfbfeb1b0059")
+	)
+	(fp_line
+		(start 6.225 2.1)
+		(end 2.975 2.1)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "Dwgs.User")
+		(uuid "203fa3dd-f525-4e15-9a70-35107107399b")
+	)
+	(fp_rect
+		(start 6.15 -2.1)
+		(end 9.65 2.1)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(fill none)
+		(layer "Dwgs.User")
+		(uuid "7b9db09e-4466-4a5b-8801-4c4f540c0a45")
+	)
+	(fp_circle
+		(center 0 0)
+		(end 3.6 0)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(fill none)
+		(layer "Dwgs.User")
+		(uuid "d3b4ce4b-5f7b-40ec-92e3-e67a55159516")
+	)
+	(pad "1" smd roundrect
+		(at 7.9 -1)
+		(size 2.5 1.5)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+		(roundrect_rratio 0.25)
+		(thermal_bridge_angle 45)
+		(uuid "08d475b0-18fb-4461-85db-5c91dad4801a")
+	)
+	(pad "2" smd roundrect
+		(at 7.9 1)
+		(size 2.5 1.5)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+		(roundrect_rratio 0.25)
+		(thermal_bridge_angle 45)
+		(uuid "e9dca61d-e661-4c44-bfe4-fe0dac0efd77")
+	)
+)

@@ -1,0 +1,24 @@
+Ref,Val,Package,PosX,PosY,Rot,Side
+C1,1u,C_0603_1608Metric,24.725,-42.45,0,bottom
+C2,1u,C_0603_1608Metric,24.75,-35.17,-90,bottom
+C3,1u,C_0603_1608Metric,18.81,-35.16,-90,bottom
+C4,10u,C_0805_2012Metric,9.83,-40.775,180,bottom
+C6,100n,C_0402_1005Metric,10.3,-39.25,180,bottom
+D1,CHG_LED,LED_0603_1608Metric,19.64,-38.58,180,bottom
+D2,D_Schottky,D_0603_1608Metric,14.62,-47.5675,90,bottom
+J1,USB4135-GF-A_REVA,USB_C_Receptacle_GCT_USB4135-GF-A_6P_TopMnt_Horizontal,32.67,-39.98,-115,bottom
+M1,Vibration Motor,vibration_motor,9.469999,-47.5375,0,bottom
+Q1,NXV55UNR,SOT-23,13.42,-42.51,-90,bottom
+R1,5.1k,R_0603_1608Metric,27.7,-34.65,65,bottom
+R2,5.1k,R_0603_1608Metric,29.10866,-35.292297,65,bottom
+R3,5.1k,R_0603_1608Metric,26.39,-39.33,-90,bottom
+R4,5.1k,R_0603_1608Metric,19.64,-41.82,180,bottom
+R5,5.1k,R_0603_1608Metric,19.63,-43.44,0,bottom
+R6,1k,R_0603_1608Metric,19.64,-40.21,180,bottom
+R7,100k,R_0603_1608Metric,9.97,-42.63,180,bottom
+R8,1k,R_0603_1608Metric,13.34,-39.78,0,bottom
+R11,1k,R_0603_1608Metric,18.5,-18.165,-90,bottom
+R12,1k,R_0603_1608Metric,16.95,-18.16,-90,bottom
+U1,BQ21040DBV,SOT-23-6,23.45,-39.53,0,bottom
+U2,TPS70933DBVR,SOT-23-5,21.83,-35.34,180,bottom
+U3,MSP430FR2110/MSP430FR2111,TSSOP-16_4.4x5mm_P0.65mm,11.11,-34.49,90,bottom

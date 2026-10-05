@@ -73,7 +73,7 @@
 #endif
 
 /* Sensor settings*/
-#define KEY_LVL     (750)                           // Defines threshold for a key press
+#define KEY_LVL     (450)                           // Defines threshold for a key press
 /*Set to ~ half the max delta expected*/
 
 /*Outputs*/
@@ -97,7 +97,7 @@ unsigned int base_cnt, meas_cnt;
 int delta_cnt;
 uint16_t pressBuffer = 0;
 uint8_t outputEnable = 0;
-uint8_t dutyCounts [] = {200, 200, 255, 255, 255};
+uint8_t dutyCounts [] = {200, 200, 255, 255, 255, 180};
 uint8_t dutyIndex = 0;
 #ifdef USE_IDLEMODE
 uint8_t idleCnt = 0;
@@ -190,7 +190,7 @@ void measure_count(void)
     TB0CTL = TBSSEL_3 + MC_2;                       // INCLK, cont mode
     TB0CCTL1 = CM_3 + CCIS_2 + CAP;                 // Pos&Neg,GND,Cap
     /*Configure Ports for relaxation oscillator*/
-    CAPTIOCTL |= CAPTURE_TOUCHPAD_1;                //Only using touchpad #1, in future could create more elaborate functions using the other pads
+    CAPTIOCTL |= CAPTURE_TOUCHPAD_3;                //Only using touchpad #3, in future could create more elaborate functions using the other pads
     /*Setup Gate Timer*/
     WDTCTL = WDT_meas_setting;                      // WDT, ACLK, interval timer
     TB0CTL |= TBCLR;                                // Clear Timer_B TBR
@@ -204,7 +204,7 @@ void startPWM(void)
 {
     TB0CCR0 = 900-1;                                // PWM Freq 32.768kHz divided by TB0CCR0
     dutyIndex++;
-    if (dutyIndex > 4)
+    if (dutyIndex > 5)
         dutyIndex = 0;
     TB0CCR2 = dutyCounts[(uint8_t)(dutyIndex)];     // CCR2 PWM duty cycle TB0CCR2/TB0CCR0
     TB0CCTL2 = OUTMOD_7;                            // CCR2 reset/set
